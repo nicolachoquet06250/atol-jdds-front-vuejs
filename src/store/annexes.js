@@ -47,6 +47,12 @@ export function getTextWidth(font= 'bold 12pt arial') {
     return metrics.width;
 }
 
+export const getJddsFromMocks = async () => await (fetch('/mocks/jdd-list.json').then(r => r.json()));
+
+export const getTypesFromMocks = async () => await (fetch('/mocks/jdd-types.json').then(r => r.json()));
+
+export const getEnvironmentsFromMocks = async () => await (fetch('/mocks/environments.json').then(r => r.json()));
+
 export const defaultData = jdds;
 export const types = _types;
 export const environments = _environments;
