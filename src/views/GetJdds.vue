@@ -344,11 +344,12 @@
 </template>
 
 <script setup>
+  import ContextMenuLinks from '../components/ContextMenu.vue';
+  import ContextMenuItemLink from '../components/ContextMenuItemLink.vue';
+
   import { computed, reactive, ref, watch } from 'vue';
   import { useStore } from 'vuex';
   import { useScrollable } from '../hooks';
-  import ContextMenuLinks from '../components/ContextMenu.vue';
-  import ContextMenuItemLink from '../components/ContextMenuItemLink.vue';
 
   const store = useStore();
 
