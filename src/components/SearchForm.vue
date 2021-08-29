@@ -10,7 +10,10 @@
     </div>
 
     <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"
-           v-model="query" @keyup.prevent.stop="handleMouseUp($event)" ref="searchField">
+           v-model="query"
+           @keyup.prevent.stop="handleMouseUp($event)"
+           @input="handleInput($event)"
+           ref="searchField">
     <span class="autocomplete"
           v-if="autocomplete.length > 0"
           @dblclick="handleAutocompleteQuery"
@@ -66,31 +69,36 @@
           }
         }
       }
-    } else {
-      if (query.value === '') {
-        autocomplete.value = '';
-      } else {
-        const matches = e.key.customMatch(/(Backspace|\w|-)/g);
 
-        if (Object.keys(matches).length > 0) {
-          autocomplete.value = String.splice(
-              [
-                ...store.getters.types,
-                ...store.getters.environments,
-                ...Object.keys(store.getters.jdds)
-                    .reduce((r, c) => [
-                      ...r,
-                      ...store.getters.jdds[c]
-                          .reduce((_r, jdd) => r.indexOf(jdd.case) === -1 && _r.indexOf(jdd.case) === -1 ? [..._r, jdd.case] : _r, [])
-                    ], [])
-              ].reduce((r, c) => r === '' && Object.keys(c.customMatch(new RegExp(`^(${query.value}).+`, 'g'))).length > 0
-                  ? c : r, ''), 0, query.value.length);
-        }
+      handleSearch();
+    }
+  };
+
+  const handleInput = (e) => {
+    if (query.value === '') {
+      autocomplete.value = '';
+    } else {
+      if (
+          (e.inputType === 'insertText' && Object.keys(e.data.customMatch(/(\w|-)/g)).length > 0)
+          || e.inputType === 'deleteContentBackward'
+      ) {
+        autocomplete.value = String.splice(
+            [
+              ...store.getters.types,
+              ...store.getters.environments,
+              ...Object.keys(store.getters.jdds)
+                  .reduce((r, c) => [
+                    ...r,
+                    ...store.getters.jdds[c]
+                        .reduce((_r, jdd) => r.indexOf(jdd.case) === -1 && _r.indexOf(jdd.case) === -1 ? [..._r, jdd.case] : _r, [])
+                  ], [])
+            ].reduce((r, c) => r === '' && Object.keys(c.customMatch(new RegExp(`^(${query.value}).+`, 'g'))).length > 0
+                ? c : r, ''), 0, query.value.length);
       }
     }
 
     handleSearch();
-  };
+  }
 
   /**
    * @param {number} i
