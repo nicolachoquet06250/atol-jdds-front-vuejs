@@ -1,6 +1,10 @@
 import { createStore } from 'vuex';
 
-import { defaultData, types, environments, customMatch, stringSplice, getTextWidth, searchByFlags, searchByEnvs, searchByAll } from './annexes';
+import {
+  // defaultData, types, environments,
+  customMatch, stringSplice, getTextWidth,
+  searchByFlags, searchByEnvs, searchByAll
+} from './annexes';
 
 /**
  * @param {RegExp} regex
@@ -11,10 +15,10 @@ String.splice = stringSplice;
 
 export default createStore({
   state: {
-    jdds: {...defaultData},
-    searchJdds: {...defaultData},
-    environments,
-    types,
+    jdds: {},
+    searchJdds: {},
+    environments: [],
+    types: [],
   },
   mutations: {
     addJdd(state, { env, jdd }) {
