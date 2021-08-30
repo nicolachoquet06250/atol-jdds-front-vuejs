@@ -2,6 +2,29 @@
   <div class="container">
     <h1>JDDs</h1>
 
+    <div class="alert alert-info alert-dismissible fade show" role="alert" v-if="infoAlert">
+      <span class="alert-icon">
+        <span class="visually-hidden">Info</span>
+      </span>
+
+      <div>
+        <ul>
+          <li>Faites un click droit sur un onglet pour le supprimer</li>
+          <li>
+            <p>Lors d'une recherche, pour auto compléter :</p>
+            <ul>
+              <li>Faites "Ctrl+Alt+Entré" pour compléter votre requête puis tapez sur "Entré" pour valider</li>
+              <li>Double clickez sur le bout de mot grisé pour compléter votre requête puis tapez sur "Entré" pour valider</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <button type="button" class="btn-close" @click="handleCloseInfoAlert">
+        <span class="visually-hidden">Close</span>
+      </button>
+    </div>
+
     <ul class="nav nav-tabs">
       <template v-if="store.getters.environments.length > 0">
         <li class="nav-item" v-for="(tabEnv, i) of store.getters.environments" :key="i">
@@ -366,7 +389,14 @@
   const tabToDeleteWithContextMenu = reactive({
     environment: '',
     type: ''
-  })
+  });
+
+  const infoAlert = ref(localStorage.getItem('disableInfoAlert') === null);
+
+  const handleCloseInfoAlert = () => {
+    infoAlert.value = false;
+    localStorage.setItem('disableInfoAlert', '1');
+  };
 
   const handleDeleteClick = () => {
     openContextMenu.value = false;
