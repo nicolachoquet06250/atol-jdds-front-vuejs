@@ -6,8 +6,7 @@ node_modules
 /tests/e2e/logs/
 
 # local env files
-.env.local
-.env.*.local
+env.json
 
 # Log files
 npm-debug.log*
