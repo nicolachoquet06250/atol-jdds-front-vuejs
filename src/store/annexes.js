@@ -1,6 +1,7 @@
 import jdds from '../../public/mocks/jdd-list.json';
 import _types from '../../public/mocks/jdd-types.json';
 import _environments from '../../public/mocks/environments.json';
+import envVars from '../../env.json';
 
 /**
  * @param {RegExp} regex
