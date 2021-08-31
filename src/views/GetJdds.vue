@@ -2,361 +2,282 @@
   <div class="container">
     <h1>JDDs</h1>
 
-    <div class="alert alert-info alert-dismissible fade show" role="alert" v-if="infoAlert">
-      <span class="alert-icon">
-        <span class="visually-hidden">Info</span>
-      </span>
+    <InfoAlert :open="infoAlert" @close="handleCloseInfoAlert">
+      <ul v-if="!isMobile && !isTablet">
+        <li>{{ mobileMessages[0] }}</li>
 
-      <div>
-        <ul>
-          <li>Faites un click droit sur un onglet pour le supprimer</li>
-          <li>
-            <p>Lors d'une recherche, pour auto compléter :</p>
-            <ul>
-              <li>Faites "Ctrl+Alt+Entré" pour compléter votre requête puis tapez sur "Entré" pour valider</li>
-              <li>Double clickez sur le bout de mot grisé pour compléter votre requête puis tapez sur "Entré" pour valider</li>
-            </ul>
-          </li>
-        </ul>
-      </div>
+        <li>
+          <p>{{ mobileMessages[1] }}</p>
 
-      <button type="button" class="btn-close" @click="handleCloseInfoAlert">
-        <span class="visually-hidden">Close</span>
-      </button>
-    </div>
+          <ul>
+            <li>{{ mobileMessages[2][0] }}</li>
 
-    <ul class="nav nav-tabs">
-      <template v-if="store.getters.environments.length > 0">
-        <li class="nav-item" v-for="(tabEnv, i) of store.getters.environments" :key="i">
-          <a :class="{'nav-link': true, active: activeEnvTab === tabEnv}"
-             href="#" @click.prevent.stop="switchEnv(tabEnv)"
-             @contextmenu.prevent.stop="handleContextMenu($event, { environment: tabEnv })">
-            {{ tabEnv.toUpperCase() }} ({{ (store.getters.jdds[tabEnv] || []).length }})
-          </a>
+            <li>{{ mobileMessages[2][1] }}</li>
+          </ul>
         </li>
+      </ul>
+
+      <span v-else>{{ desktopMessage }}</span>
+    </InfoAlert>
+
+    <tabs>
+      <template v-if="store.getters.environments.length > 0">
+        <tab v-for="(tabEnv, i) of store.getters.environments" :key="i"
+             @click="switchEnv(tabEnv)" @contextmenu="handleContextMenu($event, { environment: tabEnv })"
+            :active="activeEnvTab === tabEnv">
+          {{ tabEnv.toUpperCase() }} ({{ (store.getters.jdds[tabEnv] || []).length }})
+        </tab>
       </template>
 
-      <li class="nav-item">
+      <tab :link="false">
         <button type="button" class="btn btn-icon btn-secondary mx-2"
                 data-bs-toggle="modal" data-bs-target="#modal-add-env"
                 style="padding-bottom: calc(1px + 0.3rem); padding-top: calc(1px + 0.3rem);">
           <i class="fas fa-plus"></i>
+
           <span class="mx-1">Créer un environement</span>
         </button>
-      </li>
-    </ul>
+      </tab>
 
-    <div v-for="(envTabContent, i) of store.getters.environments" :key="i"
-         :class="{'tab-content': true, active: activeEnvTab === envTabContent}">
-      <ul class="nav nav-tabs nav-tabs-light">
-        <template v-if="store.getters.types.length > 0">
-          <li class="nav-item" v-for="(typeTabName, j) of store.getters.types" :key="j">
-            <a :class="{
-                  'nav-link': true,
-                  active: activeTypeTab === typeTabName.toUpperCase(),
-                  disabled: tabIsDisabled(envTabContent, typeTabName)
-                }" href="#"
-               :tabindex="getTabindex(envTabContent, typeTabName)"
-               :aria-disabled="tabIsDisabled(envTabContent, typeTabName)"
-               @click.prevent.stop="switchTypeTab(typeTabName)"
-               @contextmenu.prevent.stop="handleContextMenu($event, { environment: envTabContent, type: typeTabName })">
-              {{ typeTabName.toUpperCase() }} ({{ getFromEnvAndType(envTabContent, typeTabName).length }})
-            </a>
-          </li>
-        </template>
+      <template v-slot:content>
+        <div v-for="(envTabContent, i) of store.getters.environments" :key="i"
+             :class="{'tab-content': true, active: activeEnvTab === envTabContent}">
+          <tabs-light>
+            <template v-if="store.getters.types.length > 0">
+              <tab v-for="(typeTabName, j) of store.getters.types" :key="j"
+                   :active="activeTypeTab === typeTabName.toUpperCase()"
+                   :disabled="tabIsDisabled(envTabContent, typeTabName)"
+                   :tabindex="getTabindex(envTabContent, typeTabName)"
+                   @click="switchTypeTab(typeTabName)"
+                   @contextmenu="handleContextMenu($event, { environment: envTabContent, type: typeTabName })">
+                {{ typeTabName.toUpperCase() }} ({{ getFromEnvAndType(envTabContent, typeTabName).length }})
+              </tab>
+            </template>
 
-        <li class="nav-item">
-          <button type="button" class="btn btn-icon btn-secondary" data-bs-toggle="modal"
-                  :data-bs-target="`#modal-add-jdd-${envTabContent}`" @click="handleAddType">
-            <i class="fas fa-plus"></i>
-          </button>
+            <tab :link="false">
+              <button type="button" class="btn btn-icon btn-secondary" data-bs-toggle="modal"
+                      :data-bs-target="`#modal-add-jdd-${envTabContent}`" @click="handleAddType">
+                <i class="fas fa-plus"></i>
+              </button>
 
-          <button type="button" class="btn btn-icon btn-secondary mx-2"
-                  data-bs-toggle="modal" data-bs-target="#modal-add-type"
-                  style="padding-bottom: calc(1px + 0.3rem); padding-top: calc(1px + 0.3rem);">
-            <i class="fas fa-plus"></i>
-            <span class="mx-1">Créer un type</span>
-          </button>
-        </li>
-      </ul>
+              <button type="button" class="btn btn-icon btn-secondary mx-2"
+                      data-bs-toggle="modal" data-bs-target="#modal-add-type"
+                      style="padding-bottom: calc(1px + 0.3rem); padding-top: calc(1px + 0.3rem);">
+                <i class="fas fa-plus"></i>
 
-      <template v-if="store.getters.types.length > 0">
-        <div :class="{'tab-content': true, active: activeTypeTab === typeTabContent.toUpperCase()}"
-             v-for="(typeTabContent, j) of store.getters.types" :key="j">
-          <div v-for="(jdd, k) of getFromEnvAndType(envTabContent, typeTabContent)" :key="k" class="mb-4">
-            <div class="d-flex flex-row">
-              <div class="d-flex flex-column flex-1">
-                <div class="row">
-                  <div class="col-4"><strong>Cas d'utilisation</strong></div>
-                  <div class="col-8"><span v-html="jdd.case"></span></div>
+                <span class="mx-1">Créer un type</span>
+              </button>
+            </tab>
+
+            <template v-slot:content v-if="store.getters.types.length > 0">
+              <div :class="{'tab-content': true, active: activeTypeTab === typeTabContent.toUpperCase()}"
+                   v-for="(typeTabContent, j) of store.getters.types" :key="j">
+                <div v-for="(jdd, k) of getFromEnvAndType(envTabContent, typeTabContent)" :key="k" class="mb-4">
+                  <div class="d-flex flex-row">
+                    <div class="d-flex flex-column flex-1">
+                      <div class="row">
+                        <div class="col-4"><strong>Cas d'utilisation</strong></div>
+                        <div class="col-8"><span v-html="jdd.case"></span></div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-4"><strong>ND</strong></div>
+                        <div class="col-8">{{ jdd.nd || ' // ' }}</div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-4"><strong>Email</strong></div>
+                        <div class="col-8">{{ jdd.email || ' // ' }}</div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-4"><strong>Mot de passe</strong></div>
+                        <div class="col-8">{{ jdd.password || ' // ' }}</div>
+                      </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center align-items-center">
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-update-jdd"
+                                @click="handleUpdate({ env: envTabContent, id: jdd.id })">Modifier</button>
+
+                        <button type="button" class="btn btn-danger"
+                                @click.prevent.stop="handleDelete({ env: envTabContent, id: jdd.id })">Supprimer</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="row">
-                  <div class="col-4"><strong>ND</strong></div>
-                  <div class="col-8">{{ jdd.nd || ' // ' }}</div>
-                </div>
-
-                <div class="row">
-                  <div class="col-4"><strong>Email</strong></div>
-                  <div class="col-8">{{ jdd.email || ' // ' }}</div>
-                </div>
-
-                <div class="row">
-                  <div class="col-4"><strong>Mot de passe</strong></div>
-                  <div class="col-8">{{ jdd.password || ' // ' }}</div>
+                <div class="mb-4" v-if="getFromEnvAndType(envTabContent, typeTabContent).length === 0">
+                  Aucun JDD de {{ envTabContent.toUpperCase() }} en {{ typeTabContent.toUpperCase() }}
                 </div>
               </div>
+            </template>
+          </tabs-light>
+        </div>
+      </template>
+    </tabs>
 
-              <div class="d-flex justify-content-center align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-update-jdd"
-                          @click="handleUpdate({ env: envTabContent, id: jdd.id })">Modifier</button>
-                  <button type="button" class="btn btn-danger"
-                          @click.prevent.stop="handleDelete({ env: envTabContent, id: jdd.id })">Supprimer</button>
+    <modal :id="`modal-add-jdd-${envTabContent}`" @cancel="resetModal" @validate="submit" v-for="(envTabContent, i) of store.getters.environments" :key="i">
+      <template v-slot:title>
+        <h5 class="modal-title">Créer un JDD de {{ envTabContent.toUpperCase() }}</h5>
+      </template>
+
+      <template v-slot:body>
+        <form class="row" @submit.prevent.stop="submit">
+          <div class="col-12 mt-2">
+            <h2>Type</h2>
+
+            <div class="row">
+              <div class="col" v-for="(typeName, i) of store.getters.types" :key="i">
+                <div class="form-check form-switch">
+                  <input type="radio" class="form-check-input" name="type" :id="`${typeName}-type-radio`"
+                         :value="typeName" v-model="type" :checked="type === typeName">
+
+                  <label class="form-check-label" :for="`${typeName}-type-radio`">
+                    {{ typeName.toUpperCase() }}
+                  </label>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="mb-4" v-if="getFromEnvAndType(envTabContent, typeTabContent).length === 0">
-            Aucun JDD de {{ envTabContent.toUpperCase() }} en {{ typeTabContent.toUpperCase() }}
-          </div>
-        </div>
-      </template>
-    </div>
-
-    <div v-for="(envTabContent, i) of store.getters.environments" :key="i" class="modal fade" tabindex="-1" :id="`modal-add-jdd-${envTabContent}`">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Créer un JDD de {{ envTabContent.toUpperCase() }}</h5>
-
-            <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetModal">
-              <span class="visually-hidden">Close</span>
-            </button>
-          </div>
-
-          <div class="modal-body">
-            <form class="row" @submit.prevent.stop="submit">
-              <div class="col-12 mt-2">
-                <h2>Type</h2>
-
-                <div class="row">
-                  <div class="col" v-for="(typeName, i) of store.getters.types" :key="i">
-                    <div class="form-check form-switch">
-                      <input type="radio" class="form-check-input" name="type" :id="`${typeName}-type-radio`"
-                             :value="typeName" v-model="type" :checked="type === typeName">
-
-                      <label class="form-check-label" :for="`${typeName}-type-radio`">
-                        {{ typeName.toUpperCase() }}
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-12 mt-2">
+          <div class="col-12 mt-2">
                 <textarea id="case" class="form-control" v-model="useCase"
                           placeholder="Cas d'utilisation" required></textarea>
-              </div>
-
-              <div class="col-12 mt-2">
-                <input id="phone" class="form-control" type="tel" maxlength="10" v-model="nd"
-                       placeholder="ND: 07........" :required="ndRequired" />
-              </div>
-
-              <div class="col-12 mt-2">
-                <input id="email" class="form-control" type="email" v-model="email"
-                       placeholder="Email: test@test.fr" :required="emailRequired"
-                       @change="handleEmailPasswordChange" />
-              </div>
-
-              <div class="col-12 mt-2 input-group">
-                <input id="password" class="form-control" :type="passwordType" v-model="password"
-                       :placeholder="passwordPlaceholder" :required="passwordRequired"
-                       @change="handleEmailPasswordChange" />
-
-                <button type="button" class="btn btn-dark input-group-text"
-                        @click.prevent.stop="togglePassword">
-                  {{ passwordShowButtonValue }}
-                </button>
-              </div>
-
-              <div class="col-12 mt-2 text-start">
-                <button type="submit" class="btn btn-dark">Valider et continuer</button>
-              </div>
-            </form>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="submit">
-              Valider et quitter
-            </button>
-
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetModal">
-              Annuler
-            </button>
+          <div class="col-12 mt-2">
+            <input id="phone" class="form-control" type="tel" maxlength="10" v-model="nd"
+                   placeholder="ND: 07........" :required="ndRequired" />
           </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="modal fade" tabindex="-1" id="modal-update-jdd">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Modifier un JDD</h5>
+          <div class="col-12 mt-2">
+            <input id="email" class="form-control" type="email" v-model="email"
+                   placeholder="Email: test@test.fr" :required="emailRequired"
+                   @change="handleEmailPasswordChange" />
+          </div>
 
-            <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetModal">
-              <span class="visually-hidden">Close</span>
+          <div class="col-12 mt-2 input-group">
+            <input id="password" class="form-control" :type="passwordType" v-model="password"
+                   :placeholder="passwordPlaceholder" :required="passwordRequired"
+                   @change="handleEmailPasswordChange" />
+
+            <button type="button" class="btn btn-dark input-group-text"
+                    @click.prevent.stop="togglePassword">
+              {{ passwordShowButtonValue }}
             </button>
           </div>
 
-          <div class="modal-body">
-            <form class="row" @submit.prevent.stop="updateJdd">
-              <div class="col-12 mt-2">
-                <h2>Environement</h2>
+          <div class="col-12 mt-2 text-start">
+            <button type="submit" class="btn btn-dark">Valider et continuer</button>
+          </div>
+        </form>
+      </template>
+    </modal>
 
-                <div class="row">
-                  <div class="col" v-for="(envName, i) of store.getters.environments" :key="i">
-                    <div class="form-check form-switch">
-                      <input type="radio" class="form-check-input" name="env" :id="`${envName}-env-radio`"
-                             :value="envName" v-model="updatedEnv" :checked="updatedEnv === envName">
+    <modal id="modal-update-jdd" @cancel="resetModalUpdate" @validate="updateJdd">
+      <template v-slot:title>
+        <h5 class="modal-title">Modifier un JDD</h5>
+      </template>
 
-                      <label class="form-check-label" :for="`${envName}-env-radio`">
-                        {{ envName.toUpperCase() }}
-                      </label>
-                    </div>
-                  </div>
+      <template v-slot:body>
+        <form class="row" @submit.prevent.stop="updateJdd">
+          <div class="col-12 mt-2">
+            <h2>Environement</h2>
+
+            <div class="row">
+              <div class="col" v-for="(envName, i) of store.getters.environments" :key="i">
+                <div class="form-check form-switch">
+                  <input type="radio" class="form-check-input" name="env" :id="`${envName}-env-radio`"
+                         :value="envName" v-model="updatedEnv" :checked="updatedEnv === envName">
+
+                  <label class="form-check-label" :for="`${envName}-env-radio`">
+                    {{ envName.toUpperCase() }}
+                  </label>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-12 mt-2">
-                <h2>Type</h2>
+          <div class="col-12 mt-2">
+            <h2>Type</h2>
 
-                <div class="row">
-                  <div class="col" v-for="(typeName, i) of store.getters.types" :key="i">
-                    <div class="form-check form-switch">
-                      <input type="radio" class="form-check-input" name="type" :id="`${typeName}-type-radio`"
-                             :value="typeName" v-model="updatedType" :checked="updatedType === typeName.toUpperCase()">
+            <div class="row">
+              <div class="col" v-for="(typeName, i) of store.getters.types" :key="i">
+                <div class="form-check form-switch">
+                  <input type="radio" class="form-check-input" name="type" :id="`${typeName}-type-radio`"
+                         :value="typeName" v-model="updatedType" :checked="updatedType === typeName.toUpperCase()">
 
-                      <label class="form-check-label" :for="`${typeName}-type-radio`">
-                        {{ typeName.toUpperCase() }}
-                      </label>
-                    </div>
-                  </div>
+                  <label class="form-check-label" :for="`${typeName}-type-radio`">
+                    {{ typeName.toUpperCase() }}
+                  </label>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-12 mt-2">
+          <div class="col-12 mt-2">
                 <textarea id="updated-case" class="form-control" v-model="updatedUseCase"
                           placeholder="Cas d'utilisation" required></textarea>
-              </div>
-
-              <div class="col-12 mt-2">
-                <input id="updated-phone" class="form-control" type="tel" maxlength="10" v-model="updatedNd"
-                       placeholder="ND: 07........" :required="updatedNdRequired" />
-              </div>
-
-              <div class="col-12 mt-2">
-                <input id="updated-email" class="form-control" type="email" v-model="updatedEmail"
-                       placeholder="Email: test@test.fr" :required="updatedEmailRequired"
-                       @change="handleUpdatedEmailPasswordChange" />
-              </div>
-
-              <div class="col-12 mt-2 input-group">
-                <input id="updated-password" class="form-control" :type="updatedPasswordType" v-model="updatedPassword"
-                       :placeholder="updatedPasswordPlaceholder" :required="updatedPasswordRequired"
-                       @change="handleUpdatedEmailPasswordChange" />
-
-                <button type="button" class="btn btn-dark input-group-text"
-                        @click.prevent.stop="toggleUpdatedPassword">
-                  {{ updatedPasswordShowButtonValue }}
-                </button>
-              </div>
-
-              <div class="col-12 mt-2 text-start">
-                <button type="submit" class="btn btn-dark">Valider et continuer</button>
-              </div>
-            </form>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="updateJdd">
-              Valider et quitter
-            </button>
-
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetModalUpdate">
-              Annuler
-            </button>
+          <div class="col-12 mt-2">
+            <input id="updated-phone" class="form-control" type="tel" maxlength="10" v-model="updatedNd"
+                   placeholder="ND: 07........" :required="updatedNdRequired" />
           </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="modal fade" tabindex="-1" id="modal-add-env">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Modifier un JDD</h5>
+          <div class="col-12 mt-2">
+            <input id="updated-email" class="form-control" type="email" v-model="updatedEmail"
+                   placeholder="Email: test@test.fr" :required="updatedEmailRequired"
+                   @change="handleUpdatedEmailPasswordChange" />
+          </div>
 
-            <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetEnvModal">
-              <span class="visually-hidden">Close</span>
+          <div class="col-12 mt-2 input-group">
+            <input id="updated-password" class="form-control" :type="updatedPasswordType" v-model="updatedPassword"
+                   :placeholder="updatedPasswordPlaceholder" :required="updatedPasswordRequired"
+                   @change="handleUpdatedEmailPasswordChange" />
+
+            <button type="button" class="btn btn-dark input-group-text"
+                    @click.prevent.stop="toggleUpdatedPassword">
+              {{ updatedPasswordShowButtonValue }}
             </button>
           </div>
 
-          <div class="modal-body">
-            <form class="row">
-              <div class="col-12 mt-2">
-                <input id="added-env" class="form-control" type="text" v-model="addedEnv" placeholder="Environement" required />
-              </div>
-            </form>
+          <div class="col-12 mt-2 text-start">
+            <button type="submit" class="btn btn-dark">Valider et continuer</button>
           </div>
+        </form>
+      </template>
+    </modal>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click.prevent="addEnv">
-              Valider et quitter
-            </button>
+    <modal id="modal-add-env" @cancel="resetEnvModal" @validate="addEnv">
+      <template v-slot:title>
+        <h5 class="modal-title">Modifier un JDD</h5>
+      </template>
 
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetEnvModal">
-              Annuler
-            </button>
+      <template v-slot:body>
+        <form class="row">
+          <div class="col-12 mt-2">
+            <input id="added-env" class="form-control" type="text" v-model="addedEnv" placeholder="Environement" required />
           </div>
-        </div>
-      </div>
-    </div>
+        </form>
+      </template>
+    </modal>
 
-    <div class="modal fade" tabindex="-1" id="modal-add-type">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Modifier un JDD</h5>
+    <modal id="modal-add-type" @cancel="resetTypeModal" @validate="addType">
+      <template v-slot:title>
+        <h5 class="modal-title">Modifier un JDD</h5>
+      </template>
 
-            <button type="button" class="btn-close" data-bs-dismiss="modal" @click="resetTypeModal">
-              <span class="visually-hidden">Close</span>
-            </button>
+      <template v-slot:body>
+        <form class="row">
+          <div class="col-12 mt-2">
+            <input id="added-type" class="form-control" type="text" v-model="addedType" placeholder="Type de JDD" required />
           </div>
-
-          <div class="modal-body">
-            <form class="row">
-              <div class="col-12 mt-2">
-                <input id="added-type" class="form-control" type="text" v-model="addedType" placeholder="Type de JDD" required />
-              </div>
-            </form>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click.prevent="addType">
-              Valider et quitter
-            </button>
-
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetTypeModal">
-              Annuler
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+        </form>
+      </template>
+    </modal>
   </div>
 
   <context-menu-links :open="openContextMenu" :coordinate="contextMenuCoordinate" @close="setScrollable(true); openContextMenu = false">
@@ -367,14 +288,30 @@
 </template>
 
 <script setup>
-  import ContextMenuLinks from '../components/ContextMenu.vue';
-  import ContextMenuItemLink from '../components/ContextMenuItemLink.vue';
+  import ContextMenuLinks from '../components/context-menus/ContextMenu.vue';
+  import ContextMenuItemLink from '../components/context-menus/ContextMenuItemLink.vue';
+  import InfoAlert from '../components/alerts/InfoAlert.vue';
+  import Modal from '../components/Modal.vue';
+  import Tabs from '../components/tabs/Tabs.vue';
+  import TabsLight from '../components/tabs/TabsLight.vue';
+  import Tab from '../components/tabs/Tab.vue';
 
   import { computed, reactive, ref, watch } from 'vue';
   import { useStore } from 'vuex';
+  import { isTablet, isMobile } from 'mobile-device-detect';
   import { useScrollable } from '../hooks';
 
   const store = useStore();
+
+  const mobileMessages = [
+      'Faites un appuie long sur un onglet puis cliquez sur "Supprimer" pour le supprimer',
+      'Lors d\'une recherche, pour auto compléter :',
+      [
+          'Faites "Ctrl+Alt+Entré" pour compléter votre requête puis tapez sur "Entré" pour valider',
+          'Double clickez sur le bout de mot grisé pour compléter votre requête puis tapez sur "Entré" pour valider'
+      ]
+  ];
+  const desktopMessage = 'Faites un click droit sur un onglet puis cliquez sur "Supprimer" pour le supprimer';
 
   const [activeEnvTab, activeTypeTab] = [
     ref('dev'),
@@ -497,7 +434,7 @@
    * @param {'dev'|'rec'|'preprod'|'prod'} env
    * @param {'rtc'|'res'|'pro'|'sosh'} type
    */
-  const getTabindex = (env, type) => getFromType(getFromEnv(env), type.toUpperCase()).length === 0 ? -1 : false;
+  const getTabindex = (env, type) => getFromType(getFromEnv(env), type.toUpperCase()).length === 0 ? true : false;
 
   const addedType = ref('');
   const addedEnv = ref('');
