@@ -2,7 +2,7 @@
   <li class="nav-item">
     <a :class="{'nav-link': link, active, disabled}" href="#"
        @click.prevent.stop="$emit('click')"
-       @contextmenu.prevent.stop="$emit('contextmenu')"
+       @contextmenu.prevent.stop="$emit('contextmenu', $event)"
        :tabindex="tabindex ? -1 : false"
        :aria-disabled="disabled">
       <slot></slot>
