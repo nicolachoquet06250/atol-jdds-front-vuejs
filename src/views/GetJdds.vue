@@ -303,6 +303,8 @@
 
   const store = useStore();
 
+  const { setScrollable } = useScrollable();
+
   const mobileMessages = [
       'Faites un appuie long sur un onglet puis cliquez sur "Supprimer" pour le supprimer',
       'Lors d\'une recherche, pour auto compléter :',
@@ -317,8 +319,6 @@
     ref('dev'),
     ref('RTC')
   ];
-
-  const { setScrollable } = useScrollable();
 
   const isUpdated = ref(false);
   const openContextMenu = ref(false);
