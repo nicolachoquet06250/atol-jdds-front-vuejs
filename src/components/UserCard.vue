@@ -1,9 +1,5 @@
 <template>
-  <button type="button" class="btn btn-dark" v-if="!guest" @click.prevent.stop="signin(); onSignin();">
-    Se connecter
-  </button>
-
-  <div class="card text-white" v-else>
+  <div class="card text-white" v-if="guest !== false">
     <div class="card-body">
       <h5 class="card-title">{{ guest.fullname }} - {{ guest.project }}</h5>
 
@@ -18,6 +14,7 @@
 
 <script setup>
   import { defineProps } from 'vue';
+  import { useRouter } from 'vue-router';
   import { useGuest } from '../hooks';
 
   defineProps({
@@ -29,9 +26,14 @@
       type: Function,
       default: () => {}
     }
-  })
+  });
 
-  const { signin, signout, guest } = useGuest();
+  const { signout, guest } = useGuest();
+  const router = useRouter();
+
+  const onSignout = () => {
+    router.push('/login')
+  }
 </script>
 
 <style lang="scss" scoped>

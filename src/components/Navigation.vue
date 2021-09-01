@@ -13,18 +13,19 @@
 
       <div class="collapse navbar-collapse d-flex flex-row" id="navbarNav">
         <ul class="navbar-nav">
-          <li class="nav-item" v-for="route of routeList" :key="route">
-            <router-link :class="{
-                'nav-link': true,
-                disabled: route.disabled || false
-              }"
-             :tabindex="route.disabled ? -1 : false"
-             :aria-disabled="route.disabled ? 'true' : 'false'"
-             :to="{ name: route.name }">{{ route.title }}</router-link>
-          </li>
+          <template v-for="route of routeList" :key="route">
+            <li class="nav-item" v-if="showLink(route)">
+              <router-link :class="{ 'nav-link': true, disabled: route.disabled || false }"
+                           :tabindex="route.disabled ? -1 : false"
+                           :aria-disabled="route.disabled ? 'true' : 'false'"
+                           :to="{ name: route.name }">
+                {{ route.title }}
+              </router-link>
+            </li>
+          </template>
         </ul>
 
-        <search-form />
+        <search-form v-if="guest !== false" />
 
         <div class="navbar-text">
           <user-card />
@@ -35,11 +36,40 @@
 </template>
 
 <script setup>
+  import { watch } from 'vue';
+  import { useRouter } from 'vue-router';
   import UserCard from './UserCard.vue';
   import SearchForm from './SearchForm.vue';
-  import routes from '../router/routes';
+  import routes, { NOT_LOGGED, LOGGED, BOTH } from '../router/routes';
+  import { useGuest, useLoading } from '../hooks';
+
+  const { guest } = useGuest();
+  const { setLoading } = useLoading();
+  const router = useRouter();
+
+  const showLink = route => (route.mode === NOT_LOGGED && guest.value === false) || (route.mode === LOGGED && guest.value !== false) || route.mode === BOTH;
 
   const routeList = routes.reduce((r, c) => c.hide ? r : [...r, c], []);
+
+  watch(() => guest.value, () => {
+    if (guest.value === false) {
+      setLoading(true);
+
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+
+      router.push('/login');
+    } else {
+      setLoading(true);
+
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+
+      router.push('/jdds');
+    }
+  })
 </script>
 
 <style lang="scss" scoped>
