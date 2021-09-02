@@ -25,9 +25,20 @@
   import { useRouter } from 'vue-router';
   import { useGuest, useLoading } from '../hooks';
 
-  const { signin } = useGuest();
+  const { signin, guest } = useGuest();
   const { setLoading } = useLoading();
   const router = useRouter();
+
+  // Redirection si loggé
+  if (guest.value !== false) {
+    setLoading(true);
+
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    router.push('/jdds');
+  }
 
   const email = ref('nicolas.choquet.ext@orange.fr');
   const password = ref('toto');
