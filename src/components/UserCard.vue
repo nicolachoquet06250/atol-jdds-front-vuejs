@@ -15,7 +15,7 @@
 <script setup>
   import { defineProps } from 'vue';
   import { useRouter } from 'vue-router';
-  import { useGuest } from '../hooks';
+  import { useGuest, useLoading } from '../hooks';
 
   defineProps({
     onSignin: {
@@ -29,11 +29,18 @@
   });
 
   const { signout, guest } = useGuest();
+  const { setLoading } = useLoading();
   const router = useRouter();
 
   const onSignout = () => {
+    setLoading(true);
+
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
     router.push('/login')
-  }
+  };
 </script>
 
 <style lang="scss" scoped>
