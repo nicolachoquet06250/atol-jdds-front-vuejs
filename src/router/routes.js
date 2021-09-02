@@ -1,5 +1,6 @@
 import Home from "../views/Home";
 import GetJdds from '../views/GetJdds.vue';
+import Login from '../views/Login.vue';
 import NotFound from '../views/errors/404';
 import { useGuest } from '../hooks';
 
@@ -38,7 +39,7 @@ export default [
         path: '/login',
         name: 'login',
         title: 'Connection',
-        component: () => import('../views/Login.vue')
+        component: Login
     },
     {
         mode: BOTH,
