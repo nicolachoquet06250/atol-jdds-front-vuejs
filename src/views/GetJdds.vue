@@ -298,12 +298,27 @@
 
   import { computed, reactive, ref, watch } from 'vue';
   import { useStore } from 'vuex';
+  import { useRouter } from 'vue-router';
   import { isTablet, isMobile } from 'mobile-device-detect';
-  import { useScrollable } from '../hooks';
+  import { useScrollable, useGuest, useLoading } from '../hooks';
 
   const store = useStore();
+  const router = useRouter();
 
   const { setScrollable } = useScrollable();
+  const { guest } = useGuest();
+  const { setLoading } = useLoading();
+
+  // Redirection si non loggé
+  if (guest.value === false) {
+    setLoading(true);
+
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    router.push('/login');
+  }
 
   const mobileMessages = [
       'Faites un appuie long sur un onglet puis cliquez sur "Supprimer" pour le supprimer',
