@@ -36,40 +36,16 @@
 </template>
 
 <script setup>
-  import { watch } from 'vue';
-  import { useRouter } from 'vue-router';
   import UserCard from './UserCard.vue';
   import SearchForm from './SearchForm.vue';
   import routes, { NOT_LOGGED, LOGGED, BOTH } from '../router/routes';
-  import { useGuest, useLoading } from '../hooks';
+  import { useGuest } from '../hooks';
 
   const { guest } = useGuest();
-  const { setLoading } = useLoading();
-  const router = useRouter();
 
   const showLink = route => (route.mode === NOT_LOGGED && guest.value === false) || (route.mode === LOGGED && guest.value !== false) || route.mode === BOTH;
 
   const routeList = routes.reduce((r, c) => c.hide ? r : [...r, c], []);
-
-  watch(() => guest.value, () => {
-    if (guest.value === false) {
-      setLoading(true);
-
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-
-      router.push('/login');
-    } else {
-      setLoading(true);
-
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-
-      router.push('/jdds');
-    }
-  })
 </script>
 
 <style lang="scss" scoped>
